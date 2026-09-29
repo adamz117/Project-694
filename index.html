@@ -177,7 +177,7 @@
     const need = (goal - total) / daysLeft;
     $("need").textContent = fmt(need);
     $("need").className = need <= daily * 1.02 ? "pace-ok" : "pace-behind";
-    $("need-l").textContent = "needed per day from tomorrow";
+    $("need-l").textContent = beforeStart ? "needed per day to hit the goal" : "needed per day from tomorrow";
   }
 
   // Bar chart of the whole month
