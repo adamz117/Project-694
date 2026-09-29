@@ -1,2 +1,2 @@
-garminconnect>=0.2.30,<0.3
+garminconnect>=0.3.17,<0.4
 tzdata
