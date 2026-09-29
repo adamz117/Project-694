@@ -42,12 +42,21 @@ def read_lifetime_steps(url: str) -> int:
             page = browser.new_page()
             page.goto(url, wait_until="domcontentloaded", timeout=60000)
             page.wait_for_selector("text=Lifetime Totals", timeout=60000)
+            try:  # the numbers load after the heading
+                page.wait_for_function(
+                    r"() => /Steps\s*[\d,]{4,}\s*Steps/.test((document.body.innerText.split('Lifetime Totals')[1]) || '')",
+                    timeout=45000,
+                )
+            except Exception:
+                pass  # fall through: the check below reports what the page showed
             text = page.inner_text("body")
         finally:
             browser.close()
     section = text.split("Lifetime Totals", 1)[1]
     m = re.search(r"Steps\s*([\d,]+)\s*Steps", section)
     if not m:
+        (ROOT / "logs").mkdir(exist_ok=True)
+        (ROOT / "logs" / "last_page.txt").write_text(text, encoding="utf-8")
         raise RuntimeError("Could not find lifetime Steps on the profile page (is it public?).")
     return int(m.group(1).replace(",", ""))
 
