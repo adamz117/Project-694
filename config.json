@@ -1,0 +1,16 @@
+{
+  "title": "694,000 Steps for October",
+  "name": "Adam",
+  "goal": 694000,
+  "start": "2026-10-01",
+  "end": "2026-10-31",
+  "timezone": "Africa/Johannesburg",
+  "charity": "Pink Drive",
+  "donate_url": "https://www.givengain.com/project/adam-raising-funds-for-pinkdrive-npc-130466",
+  "instagram": "https://instagram.com/replace_me",
+  "fact": "WHO estimates 694,000 deaths from breast cancer worldwide in 2024. One step for each of them.",
+  "fact_source_url": "https://www.who.int/news-room/fact-sheets/detail/breast-cancer",
+  "dedications": {
+    "2026-10-01": "Day 1 - for everyone who has fought breast cancer"
+  }
+}

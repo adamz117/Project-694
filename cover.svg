@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-label="Project 694 - 694,000 steps for breast cancer awareness">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff7fa"/>
+      <stop offset="1" stop-color="#ffd3e5"/>
+    </linearGradient>
+    <linearGradient id="num" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#ffb3d1"/>
+      <stop offset="0.28" stop-color="#ff5f9f"/>
+      <stop offset="0.6"  stop-color="#e6337a"/>
+      <stop offset="1"    stop-color="#96104a"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#ffffff" stop-opacity=".5"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ribbon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff8fbd"/>
+      <stop offset="1" stop-color="#c8155f"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#96104a" flood-opacity=".35"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="400" fill="url(#bg)"/>
+  <!-- soft decorative circles -->
+  <circle cx="1130" cy="40" r="170" fill="#ffffff" opacity=".35"/>
+  <circle cx="60" cy="380" r="130" fill="#ffffff" opacity=".35"/>
+
+  <!-- PROJECT -->
+  <g fill="#e6337a">
+    <rect x="70" y="86" width="70" height="3" rx="1.5"/>
+    <rect x="480" y="86" width="70" height="3" rx="1.5"/>
+  </g>
+  <text x="310" y="99" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-weight="600" font-size="30" fill="#e6337a" textLength="190" lengthAdjust="spacing">PROJECT</text>
+
+  <!-- 694 -->
+  <g filter="url(#shadow)">
+    <text x="310" y="310" text-anchor="middle" font-family="'Arial Black','Segoe UI Black','Helvetica Neue',Impact,sans-serif"
+          font-weight="900" font-size="230" fill="url(#num)" textLength="470" lengthAdjust="spacingAndGlyphs">694</text>
+  </g>
+  <text x="310" y="310" text-anchor="middle" font-family="'Arial Black','Segoe UI Black','Helvetica Neue',Impact,sans-serif"
+        font-weight="900" font-size="230" fill="url(#gloss)" textLength="470" lengthAdjust="spacingAndGlyphs">694</text>
+
+  <!-- ribbon -->
+  <g transform="translate(640 205) scale(.6) translate(-256 -245)"
+     fill="none" stroke="url(#ribbon)" stroke-width="54" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M200 410 L268 268 C300 200 320 120 268 95 C225 80 195 135 225 200 C232 218 238 240 244 268 L312 410"/>
+  </g>
+
+  <!-- message -->
+  <g font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+    <text x="730" y="150" font-weight="800" font-size="50" fill="#96104a">694,000 STEPS</text>
+    <text x="732" y="192" font-weight="600" font-size="24" letter-spacing="4" fill="#e6337a">IN 31 DAYS OF OCTOBER</text>
+    <rect x="732" y="216" width="90" height="4" rx="2" fill="#e6337a"/>
+    <text x="732" y="256" font-weight="500" font-size="23" fill="#5a2a3d">One step for every life lost to</text>
+    <text x="732" y="285" font-weight="500" font-size="23" fill="#5a2a3d">breast cancer each year.</text>
+    <text x="732" y="332" font-weight="700" font-size="22" fill="#96104a">Walking for Pink Drive</text>
+  </g>
+</svg>

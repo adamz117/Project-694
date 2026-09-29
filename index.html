@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>694,000 Steps for October</title>
+<meta name="description" content="Walking 694,000 steps in October for breast cancer awareness - follow the live count.">
+<meta property="og:title" content="694,000 Steps for October">
+<meta property="og:description" content="Live step count for breast cancer awareness month. Follow along and donate.">
+<meta property="og:type" content="website">
+<style>
+  :root {
+    --bg: #fff5f8; --card: #ffffff; --ink: #2a1520; --muted: #7b5b68;
+    --pink: #e6337a; --pink-2: #ff7eb0; --track: #f6d7e3; --ok: #1f9d6b; --warn: #d9822b;
+    --shadow: 0 6px 24px rgba(230, 51, 122, .12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a0f15; --card: #27171f; --ink: #fbeaf1; --muted: #c39bab;
+      --track: #4a2a38; --shadow: 0 6px 24px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { text-align: center; margin-bottom: 20px; }
+  .ribbon { font-size: 34px; line-height: 1; }
+  h1 { margin: 6px 0 4px; font-size: 26px; letter-spacing: -.01em; }
+  .sub { color: var(--muted); margin: 0; font-size: 15px; }
+  .card { background: var(--card); border-radius: 18px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+  .big { text-align: center; }
+  .big .num { font-size: clamp(44px, 14vw, 68px); font-weight: 800; color: var(--pink); font-variant-numeric: tabular-nums; line-height: 1.05; }
+  .big .of { color: var(--muted); font-size: 15px; margin-top: 2px; }
+  .bar { height: 18px; background: var(--track); border-radius: 99px; overflow: hidden; margin: 16px 0 6px; }
+  .bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--pink), var(--pink-2)); border-radius: 99px; transition: width 1.2s ease; }
+  .pct { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat { background: var(--card); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
+  .stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 13px; }
+  .pace-ok { color: var(--ok); } .pace-behind { color: var(--warn); }
+  h2 { font-size: 15px; margin: 0 0 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  .chart { display: flex; align-items: flex-end; gap: 3px; height: 120px; position: relative; }
+  .chart .col { flex: 1; background: var(--pink-2); border-radius: 3px 3px 0 0; min-height: 2px; }
+  .chart .col.today { background: var(--pink); }
+  .chart .col.empty { background: var(--track); }
+  .chart .goal { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--muted); opacity: .6; }
+  .chart-note { font-size: 12px; color: var(--muted); margin-top: 6px; display: flex; justify-content: space-between; }
+  .dedic { text-align: center; font-size: 17px; }
+  .dedic small { display: block; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .btn { display: block; text-align: center; text-decoration: none; background: var(--pink); color: #fff; font-weight: 700; padding: 15px; border-radius: 14px; font-size: 18px; box-shadow: var(--shadow); margin-bottom: 12px; }
+  .btn.alt { background: transparent; color: var(--pink); border: 2px solid var(--pink); box-shadow: none; font-size: 16px; padding: 12px; }
+  .fact { text-align: center; color: var(--muted); font-size: 14px; margin: 20px 4px 0; }
+  .updated { text-align: center; color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .banner { background: #fff3cd; color: #664d03; padding: 8px 12px; border-radius: 10px; font-size: 13px; text-align: center; margin-bottom: 16px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="logo.svg" alt="Project 694 logo" width="210" style="max-width:70%;height:auto">
+    <h1 id="title">694,000 Steps for October</h1>
+    <p class="sub" id="sub">Breast Cancer Awareness Month</p>
+  </header>
+
+  <div id="banner" class="banner hidden"></div>
+
+  <section class="card big">
+    <div class="num" id="total">0</div>
+    <div class="of" id="of">of 694,000 steps</div>
+    <div class="bar"><i id="fill"></i></div>
+    <div class="pct"><span id="pct">0%</span><span id="left"></span></div>
+  </section>
+
+  <section class="grid" style="margin-bottom:16px">
+    <div class="stat"><b id="today">-</b><span>steps today</span></div>
+    <div class="stat"><b id="daysleft">-</b><span id="daysleft-l">days left</span></div>
+    <div class="stat"><b id="avg">-</b><span>daily average</span></div>
+    <div class="stat"><b id="need">-</b><span id="need-l">needed per day</span></div>
+  </section>
+
+  <section class="card">
+    <h2>Steps per day</h2>
+    <div class="chart" id="chart"></div>
+    <div class="chart-note"><span id="c-start"></span><span>- - daily target</span><span id="c-end"></span></div>
+  </section>
+
+  <section class="card dedic hidden" id="dedic-card">
+    <small>Today's dedication</small>
+    <span id="dedic"></span>
+  </section>
+
+  <a class="btn" id="donate" href="#" target="_blank" rel="noopener">Donate</a>
+  <a class="btn alt" id="insta" href="#" target="_blank" rel="noopener">Follow the journey on Instagram</a>
+
+  <p class="fact" id="fact"></p>
+  <p class="updated" id="updated"></p>
+</main>
+
+<script>
+(async () => {
+  const $ = id => document.getElementById(id);
+  const fmt = n => Math.round(n).toLocaleString("en-US");
+  const bust = "?t=" + Date.now();
+  const [cfg, data] = await Promise.all([
+    fetch("config.json" + bust).then(r => r.json()),
+    fetch("data/steps.json" + bust).then(r => r.json())
+  ]);
+
+  // Dates are handled as "YYYY-MM-DD" strings converted to UTC day numbers, so timezones never shift them.
+  const dayNum = s => Date.parse(s + "T00:00:00Z") / 86400000;
+  const todayStr = tz => new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
+
+  const goal = cfg.goal, start = dayNum(cfg.start), end = dayNum(cfg.end);
+  const totalDays = end - start + 1;
+  const byDate = Object.fromEntries(data.days.map(d => [d.date, d.steps]));
+  const total = data.days.reduce((a, d) => a + d.steps, 0);
+  const lastData = data.days.length ? data.days[data.days.length - 1].date : cfg.start;
+  const todayS = data.sample ? lastData : todayStr(cfg.timezone);
+  const today = dayNum(todayS);
+  const beforeStart = today < start;
+  const finished = today > end;
+
+  document.title = cfg.title;
+  $("title").textContent = cfg.title;
+  $("sub").textContent = "Walking for " + cfg.charity + " - Breast Cancer Awareness Month";
+  $("of").textContent = "of " + fmt(goal) + " steps";
+  $("fact").textContent = cfg.fact || "";
+  if (cfg.fact_source_url) {
+    const a = document.createElement("a");
+    a.href = cfg.fact_source_url; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = " (Source: WHO)"; a.style.color = "var(--pink)";
+    $("fact").appendChild(a);
+  }
+  $("donate").href = cfg.donate_url;
+  $("donate").textContent = "Donate to " + cfg.charity;
+  if (cfg.instagram) $("insta").href = cfg.instagram; else $("insta").classList.add("hidden");
+
+  if (data.sample) { $("banner").textContent = "Showing sample data - live Garmin sync not connected yet."; $("banner").classList.remove("hidden"); }
+
+  const pct = Math.min(100, total / goal * 100);
+  $("pct").textContent = pct.toFixed(1) + "%";
+  $("left").textContent = total >= goal ? "Goal reached! 🎉" : fmt(goal - total) + " to go";
+  requestAnimationFrame(() => setTimeout(() => { $("fill").style.width = pct + "%"; }, 50));
+
+  // Count-up animation for the big number
+  const t0 = performance.now(), dur = 1200;
+  const tick = now => {
+    const p = Math.min(1, (now - t0) / dur);
+    $("total").textContent = fmt(total * (1 - Math.pow(1 - p, 3)));
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+
+  const elapsed = Math.max(0, Math.min(today, end) - start + 1);       // days including today
+  const daysLeft = finished ? 0 : Math.max(0, end - Math.max(today, start - 1));
+  const daily = goal / totalDays;
+
+  $("today").textContent = beforeStart ? "-" : fmt(byDate[todayS] || 0);
+  if (beforeStart) {
+    $("daysleft").textContent = String(start - today);
+    $("daysleft-l").textContent = "days until the walk starts";
+  } else {
+    $("daysleft").textContent = String(daysLeft);
+    $("daysleft-l").textContent = daysLeft === 1 ? "day left after today" : "days left after today";
+  }
+  $("avg").textContent = elapsed > 0 && !beforeStart ? fmt(total / elapsed) : "-";
+
+  // Steps needed per day from tomorrow onward, based on what is still to go
+  if (finished || total >= goal || daysLeft === 0) {
+    $("need").textContent = "-";
+  } else {
+    const need = (goal - total) / daysLeft;
+    $("need").textContent = fmt(need);
+    $("need").className = need <= daily * 1.02 ? "pace-ok" : "pace-behind";
+    $("need-l").textContent = "needed per day from tomorrow";
+  }
+
+  // Bar chart of the whole month
+  const max = Math.max(daily * 1.3, ...data.days.map(d => d.steps));
+  const chart = $("chart");
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date((start + i) * 86400000).toISOString().slice(0, 10);
+    const col = document.createElement("div");
+    const v = byDate[d];
+    col.className = "col" + (v === undefined ? " empty" : "") + (d === todayS ? " today" : "");
+    col.style.height = (v === undefined ? 2 : Math.max(2, v / max * 100)) + "%";
+    col.title = d + (v === undefined ? "" : ": " + fmt(v) + " steps");
+    chart.appendChild(col);
+  }
+  const g = document.createElement("div");
+  g.className = "goal"; g.style.bottom = (daily / max * 100) + "%";
+  chart.appendChild(g);
+  const short = s => new Date(dayNum(s) * 86400000).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+  $("c-start").textContent = short(cfg.start); $("c-end").textContent = short(cfg.end);
+
+  const ded = cfg.dedications && cfg.dedications[todayS];
+  if (ded) { $("dedic").textContent = ded; $("dedic-card").classList.remove("hidden"); }
+
+  if (data.updated) {
+    const mins = Math.round((Date.now() - Date.parse(data.updated)) / 60000);
+    const ago = mins < 2 ? "just now" : mins < 90 ? mins + " min ago" : mins < 2880 ? Math.round(mins / 60) + " hours ago" : Math.round(mins / 1440) + " days ago";
+    $("updated").textContent = "Last synced " + ago + " - updates roughly hourly";
+  }
+})().catch(e => { document.getElementById("banner").textContent = "Couldn't load the step data. Please refresh."; document.getElementById("banner").classList.remove("hidden"); console.error(e); });
+</script>
+</body>
+</html>
