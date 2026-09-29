@@ -57,6 +57,9 @@
   .updated { text-align: center; color: var(--muted); font-size: 12px; margin-top: 10px; }
   .banner { background: #fff3cd; color: #664d03; padding: 8px 12px; border-radius: 10px; font-size: 13px; text-align: center; margin-bottom: 16px; }
   .hidden { display: none; }
+  .proofs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+  .proofs a { display: block; text-decoration: none; color: var(--muted); font-size: 12px; text-align: center; }
+  .proofs img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; object-position: top; border-radius: 10px; border: 1px solid var(--track); display: block; margin-bottom: 4px; }
 </style>
 </head>
 <body>
@@ -89,6 +92,12 @@
     <div class="chart-note"><span id="c-start"></span><span>- - daily target</span><span id="c-end"></span></div>
   </section>
 
+  <section class="card hidden" id="proof-card">
+    <h2>Proof of steps</h2>
+    <div class="proofs" id="proofs"></div>
+    <div class="chart-note"><span>Daily step screenshots from my Garmin. Tap to enlarge.</span></div>
+  </section>
+
   <section class="card dedic hidden" id="dedic-card">
     <small>Today's dedication</small>
     <span id="dedic"></span>
@@ -96,6 +105,7 @@
 
   <a class="btn" id="donate" href="#" target="_blank" rel="noopener">Donate</a>
   <a class="btn alt" id="insta" href="#" target="_blank" rel="noopener">Follow the journey on Instagram</a>
+  <a class="btn alt" id="garmin" href="#" target="_blank" rel="noopener">View my Garmin Connect profile</a>
 
   <p class="fact" id="fact"></p>
   <p class="updated" id="updated"></p>
@@ -106,9 +116,10 @@
   const $ = id => document.getElementById(id);
   const fmt = n => Math.round(n).toLocaleString("en-US");
   const bust = "?t=" + Date.now();
-  const [cfg, data] = await Promise.all([
+  const [cfg, data, proofs] = await Promise.all([
     fetch("config.json" + bust).then(r => r.json()),
-    fetch("data/steps.json" + bust).then(r => r.json())
+    fetch("data/steps.json" + bust).then(r => r.json()),
+    fetch("data/proofs.json" + bust).then(r => r.ok ? r.json() : {}).catch(() => ({}))
   ]);
 
   // Dates are handled as "YYYY-MM-DD" strings converted to UTC day numbers, so timezones never shift them.
@@ -139,6 +150,23 @@
   $("donate").href = cfg.donate_url;
   $("donate").textContent = "Donate to " + cfg.charity;
   if (cfg.instagram) $("insta").href = cfg.instagram; else $("insta").classList.add("hidden");
+  if (cfg.garmin_profile) $("garmin").href = cfg.garmin_profile; else $("garmin").classList.add("hidden");
+
+  // Proof screenshots, newest first
+  const proofDays = Object.keys(proofs).sort().reverse();
+  if (proofDays.length) {
+    const grid = $("proofs");
+    for (const d of proofDays) {
+      const a = document.createElement("a");
+      a.href = proofs[d]; a.target = "_blank"; a.rel = "noopener";
+      const img = document.createElement("img");
+      img.src = proofs[d]; img.alt = "Step count screenshot for " + d; img.loading = "lazy";
+      const cap = document.createElement("span");
+      cap.textContent = new Date(Date.parse(d + "T00:00:00Z")).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+      a.append(img, cap); grid.appendChild(a);
+    }
+    $("proof-card").classList.remove("hidden");
+  }
 
   if (data.sample) { $("banner").textContent = "Showing sample data - live Garmin sync not connected yet."; $("banner").classList.remove("hidden"); }
 
@@ -204,7 +232,7 @@
   if (data.updated) {
     const mins = Math.round((Date.now() - Date.parse(data.updated)) / 60000);
     const ago = mins < 2 ? "just now" : mins < 90 ? mins + " min ago" : mins < 2880 ? Math.round(mins / 60) + " hours ago" : Math.round(mins / 1440) + " days ago";
-    $("updated").textContent = "Last synced " + ago + " - updates roughly hourly";
+    $("updated").textContent = "Last updated " + ago;
   }
 })().catch(e => { document.getElementById("banner").textContent = "Couldn't load the step data. Please refresh."; document.getElementById("banner").classList.remove("hidden"); console.error(e); });
 </script>

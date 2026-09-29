@@ -54,6 +54,10 @@ def main() -> int:
         print("Walk has not started yet - nothing to fetch.")
         return 0
 
+    if not any(os.environ.get(k) for k in ("GARMIN_TOKENS", "GARMIN_EMAIL")):
+        print("No Garmin credentials configured - skipping (manual mode).")
+        return 0
+
     steps = fetch_days(login(), start, end)
     steps.update(json.loads(MANUAL_PATH.read_text(encoding="utf-8")) if MANUAL_PATH.exists() else {})
 
