@@ -18,6 +18,7 @@ import json
 import re
 import subprocess
 import sys
+import time as _time
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -30,14 +31,24 @@ STEPS = ROOT / "data" / "steps.json"
 TZ = ZoneInfo(CFG["timezone"])
 
 
+def launch_browser(p):
+    """Try Edge, then Chrome, then Playwright's own Chromium; retry each once."""
+    errors = []
+    for kwargs in ({"channel": "msedge"}, {"channel": "chrome"}, {}):
+        for _ in range(2):
+            try:
+                return p.chromium.launch(headless=True, **kwargs)
+            except Exception as e:  # noqa: BLE001
+                errors.append(f"{kwargs or 'bundled chromium'}: {str(e).strip().splitlines()[0]}")
+                _time.sleep(3)
+    raise RuntimeError("Could not start a browser:\n  " + "\n  ".join(errors))
+
+
 def read_lifetime_steps(url: str) -> int:
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:
-        try:
-            browser = p.chromium.launch(channel="msedge", headless=True)
-        except Exception:
-            browser = p.chromium.launch(headless=True)  # needs: playwright install chromium
+        browser = launch_browser(p)
         try:
             page = browser.new_page()
             page.goto(url, wait_until="domcontentloaded", timeout=60000)
