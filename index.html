@@ -42,6 +42,10 @@
   .stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
   .stat span { color: var(--muted); font-size: 13px; }
   .stat.wide { grid-column: 1 / -1; }
+  .tabs { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+  .tab { text-decoration: none; padding: 8px 20px; border-radius: 99px; font-weight: 700; font-size: 15px; color: var(--pink); border: 2px solid var(--pink); transition: background .2s ease, color .2s ease; }
+  .tab:hover { background: rgba(230, 51, 122, .1); }
+  .tab.active { background: var(--pink); color: #fff; }
   .pace-ok { color: var(--ok); } .pace-behind { color: var(--warn); }
   h2 { font-size: 15px; margin: 0 0 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
   .chart { display: flex; align-items: flex-end; gap: 3px; height: 120px; position: relative; touch-action: pan-y; }
@@ -94,6 +98,7 @@
     <img src="logo.svg" alt="Project 694 logo" width="210" style="max-width:70%;height:auto">
     <h1 id="title">694,000 Steps for October</h1>
     <p class="sub" id="sub">Breast Cancer Awareness Month</p>
+    <nav class="tabs" aria-label="Pages"><a class="tab active" href="./" aria-current="page">Live count</a><a class="tab" href="proof/">Proof</a></nav>
   </header>
 
   <div id="banner" class="banner hidden"></div>
@@ -119,12 +124,6 @@
     <div class="chart-note"><span id="c-start"></span><span>- - daily target</span><span id="c-end"></span></div>
   </section>
 
-  <section class="card hidden" id="proof-card">
-    <h2>Proof of steps</h2>
-    <div class="proofs" id="proofs"></div>
-    <div class="chart-note"><span>Daily step screenshots from my Garmin. Tap to enlarge.</span></div>
-  </section>
-
   <section class="card dedic hidden" id="dedic-card">
     <small>Today's dedication</small>
     <span id="dedic"></span>
@@ -143,10 +142,9 @@
   const $ = id => document.getElementById(id);
   const fmt = n => Math.round(n).toLocaleString("en-US");
   const bust = "?t=" + Date.now();
-  const [cfg, data, proofs] = await Promise.all([
+  const [cfg, data] = await Promise.all([
     fetch("config.json" + bust).then(r => r.json()),
-    fetch("data/steps.json" + bust).then(r => r.json()),
-    fetch("data/proofs.json" + bust).then(r => r.ok ? r.json() : {}).catch(() => ({}))
+    fetch("data/steps.json" + bust).then(r => r.json())
   ]);
 
   // Dates are handled as "YYYY-MM-DD" strings converted to UTC day numbers, so timezones never shift them.
@@ -178,22 +176,6 @@
   $("donate").textContent = "Donate to " + cfg.charity;
   if (cfg.instagram) $("insta").href = cfg.instagram; else $("insta").classList.add("hidden");
   if (cfg.garmin_profile) $("garmin").href = cfg.garmin_profile; else $("garmin").classList.add("hidden");
-
-  // Proof screenshots, newest first
-  const proofDays = Object.keys(proofs).sort().reverse();
-  if (proofDays.length) {
-    const grid = $("proofs");
-    for (const d of proofDays) {
-      const a = document.createElement("a");
-      a.href = proofs[d]; a.target = "_blank"; a.rel = "noopener";
-      const img = document.createElement("img");
-      img.src = proofs[d]; img.alt = "Step count screenshot for " + d; img.loading = "lazy";
-      const cap = document.createElement("span");
-      cap.textContent = new Date(Date.parse(d + "T00:00:00Z")).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
-      a.append(img, cap); grid.appendChild(a);
-    }
-    $("proof-card").classList.remove("hidden");
-  }
 
   if (data.sample) { $("banner").textContent = "Showing sample data - live Garmin sync not connected yet."; $("banner").classList.remove("hidden"); }
 

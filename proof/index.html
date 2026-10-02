@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proof of Steps - Project 694</title>
+<meta name="description" content="Screenshots of my Garmin Connect step totals for each finished day of the Project 694 walk.">
+<meta property="og:title" content="Proof of steps - Project 694">
+<meta property="og:description" content="Garmin Connect daily step totals for each finished day.">
+<style>
+  :root {
+    --bg: #fff5f8; --card: #ffffff; --ink: #2a1520; --muted: #7b5b68;
+    --pink: #e6337a; --pink-2: #ff7eb0; --track: #f6d7e3;
+    --shadow: 0 6px 24px rgba(230, 51, 122, .12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1a0f15; --card: #27171f; --ink: #fbeaf1; --muted: #c39bab; --track: #4a2a38; --shadow: 0 6px 24px rgba(0,0,0,.4); }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { text-align: center; margin-bottom: 20px; }
+  header img { max-width: 70%; height: auto; }
+  h1 { margin: 6px 0 4px; font-size: 26px; letter-spacing: -.01em; }
+  .sub { color: var(--muted); margin: 0 auto; font-size: 15px; max-width: 520px; }
+  .tabs { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+  .tab { text-decoration: none; padding: 8px 20px; border-radius: 99px; font-weight: 700; font-size: 15px; color: var(--pink); border: 2px solid var(--pink); transition: background .2s ease, color .2s ease; }
+  .tab:hover { background: rgba(230, 51, 122, .1); }
+  .tab.active { background: var(--pink); color: #fff; }
+  .card { background: var(--card); border-radius: 18px; padding: 16px; box-shadow: var(--shadow); margin-bottom: 18px; }
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .card-head h2 { margin: 0; font-size: 18px; }
+  .card-head .steps { color: var(--pink); font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .shot { display: block; }
+  .shot img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--track); display: block; }
+  .note { color: var(--muted); font-size: 13px; margin: 8px 2px 0; }
+  .empty { text-align: center; color: var(--muted); padding: 28px 8px; }
+  .btn { display: block; text-align: center; text-decoration: none; font-weight: 700; padding: 13px; border-radius: 14px; font-size: 16px; color: var(--pink); border: 2px solid var(--pink); margin-bottom: 12px; }
+  .hidden { display: none; }
+  @media (prefers-reduced-motion: no-preference) {
+    .card { transition: transform .35s ease, box-shadow .35s ease; }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(230, 51, 122, .22); }
+    .shot img { transition: transform .3s ease; }
+    .shot:hover img { transform: scale(1.01); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <a href="../"><img src="../logo.svg" alt="Project 694 logo" width="210"></a>
+    <h1>Proof of steps</h1>
+    <p class="sub">A screenshot of my Garmin Connect Steps page for each finished day. Tap one to see it full size.</p>
+    <nav class="tabs" aria-label="Pages"><a class="tab" href="../">Live count</a><a class="tab active" href="./" aria-current="page">Proof</a></nav>
+  </header>
+
+  <div id="list"></div>
+  <p class="empty hidden" id="empty">The first screenshot appears here once a day is finished.</p>
+
+  <a class="btn hidden" id="garmin" href="#" target="_blank" rel="noopener">View my Garmin Connect profile</a>
+  <a class="btn" href="../">Back to the live count</a>
+</main>
+
+<script>
+(async () => {
+  const $ = id => document.getElementById(id);
+  const fmt = n => Math.round(n).toLocaleString("en-US");
+  const bust = "?t=" + Date.now();
+  const get = (url, fallback) => fetch(url + bust).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
+  const [cfg, steps, proofs] = await Promise.all([
+    get("../config.json", {}), get("../data/steps.json", { days: [] }), get("../data/proofs.json", {})
+  ]);
+  const byDate = Object.fromEntries((steps.days || []).map(d => [d.date, d.steps]));
+  if (cfg.garmin_profile) { $("garmin").href = cfg.garmin_profile; $("garmin").classList.remove("hidden"); }
+
+  const days = Object.keys(proofs).sort().reverse();   // newest first
+  if (!days.length) { $("empty").classList.remove("hidden"); return; }
+
+  const label = d => new Date(Date.parse(d + "T00:00:00Z")).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+  for (const d of days) {
+    const card = document.createElement("section");
+    card.className = "card";
+    const head = document.createElement("div");
+    head.className = "card-head";
+    const h2 = document.createElement("h2");
+    h2.textContent = label(d);
+    const total = document.createElement("span");
+    total.className = "steps";
+    total.textContent = byDate[d] !== undefined ? fmt(byDate[d]) + " steps" : "";
+    head.append(h2, total);
+    const a = document.createElement("a");
+    a.className = "shot"; a.href = "../" + proofs[d]; a.target = "_blank"; a.rel = "noopener";
+    const img = document.createElement("img");
+    img.src = "../" + proofs[d]; img.alt = "Garmin Connect step total for " + label(d); img.loading = "lazy";
+    a.appendChild(img);
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "Screenshot of the Garmin Connect Steps page for this day.";
+    card.append(head, a, note);
+    $("list").appendChild(card);
+  }
+})();
+</script>
+</body>
+</html>
