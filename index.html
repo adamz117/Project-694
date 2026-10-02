@@ -72,9 +72,6 @@
   .updated { text-align: center; color: var(--muted); font-size: 12px; margin-top: 10px; }
   .banner { background: #fff3cd; color: #664d03; padding: 8px 12px; border-radius: 10px; font-size: 13px; text-align: center; margin-bottom: 16px; }
   .hidden { display: none; }
-  .proofs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
-  .proofs a { display: block; text-decoration: none; color: var(--muted); font-size: 12px; text-align: center; }
-  .proofs img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; object-position: top; border-radius: 10px; border: 1px solid var(--track); display: block; margin-bottom: 4px; }
   /* Subtle motion (switched off for people who prefer reduced motion) */
   @media (prefers-reduced-motion: no-preference) {
     .card, .stat, .btn { transition: opacity .6s ease, transform .35s ease, box-shadow .35s ease, filter .25s ease; }
@@ -83,8 +80,6 @@
     .btn.alt:hover { background: rgba(230, 51, 122, .08); box-shadow: none; }
     header img { transition: transform .4s ease; }
     header img:hover { transform: scale(1.04) rotate(-1deg); }
-    .proofs img { transition: transform .3s ease, box-shadow .3s ease; }
-    .proofs a:hover img { transform: scale(1.04); box-shadow: var(--shadow); }
     .chart .col { transition: transform .25s cubic-bezier(.2, .8, .2, 1), filter .2s ease, opacity .2s ease; }
     .js-anim .chart:not(.in) .col { transform: scaleY(0); }
     .js-anim .reveal { opacity: 0; transform: translateY(18px); }
@@ -98,7 +93,7 @@
     <img src="logo.svg" alt="Project 694 logo" width="210" style="max-width:70%;height:auto">
     <h1 id="title">694,000 Steps for October</h1>
     <p class="sub" id="sub">Breast Cancer Awareness Month</p>
-    <nav class="tabs" aria-label="Pages"><a class="tab active" href="./" aria-current="page">Live count</a><a class="tab" href="proof/">Daily log</a></nav>
+    <nav class="tabs" aria-label="Pages"><a class="tab active" href="./" aria-current="page">Live count</a><a class="tab" href="log/">Daily log</a></nav>
   </header>
 
   <div id="banner" class="banner hidden"></div>

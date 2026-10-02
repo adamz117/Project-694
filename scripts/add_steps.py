@@ -1,13 +1,13 @@
-"""Manual backup: record a day's steps (plus an optional proof screenshot) and publish.
+"""Manual backup: record a day's steps (plus an optional screenshot) and publish.
 
     py scripts/add_steps.py 24500                              # today's steps
     py scripts/add_steps.py 24500 --date 2026-10-03            # a specific day
-    py scripts/add_steps.py 24500 --proof "C:/path/shot.png"   # attach proof screenshot
+    py scripts/add_steps.py 24500 --shot "C:/path/shot.png"    # attach a screenshot to the daily log
     py scripts/add_steps.py 24500 --no-push                    # update files only
 
 Writes data/manual.json (so a later Garmin sync keeps your number), rebuilds
-data/steps.json, copies any proof image to proof/<date>.<ext> and lists it in
-data/proofs.json, then commits and pushes so the live page updates.
+data/steps.json, copies any screenshot to log/<date>.<ext> and lists it in
+data/log.json, then commits and pushes so the live page updates.
 """
 import argparse
 import json
@@ -21,8 +21,8 @@ ROOT = Path(__file__).resolve().parent.parent
 CFG = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
 MANUAL = ROOT / "data" / "manual.json"
 STEPS = ROOT / "data" / "steps.json"
-PROOFS = ROOT / "data" / "proofs.json"
-PROOF_DIR = ROOT / "proof"
+SHOTS = ROOT / "data" / "log.json"
+LOG_DIR = ROOT / "log"
 
 
 def load(path: Path, default):
@@ -37,7 +37,7 @@ def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("steps", type=int)
     p.add_argument("--date", help="YYYY-MM-DD (default: today in your timezone)")
-    p.add_argument("--proof", help="path to a screenshot to show on the site as proof")
+    p.add_argument("--shot", help="path to a screenshot to show in the daily log on the site")
     p.add_argument("--no-push", action="store_true")
     a = p.parse_args()
 
@@ -73,18 +73,18 @@ def main() -> None:
     print(f"{day}: {a.steps:,} steps. Total so far: {sum(d['steps'] for d in days):,}")
 
     to_add = ["data/steps.json", "data/manual.json"]
-    if a.proof:
-        src = Path(a.proof)
+    if a.shot:
+        src = Path(a.shot)
         if not src.is_file():
-            raise SystemExit(f"Proof image not found: {src}")
-        PROOF_DIR.mkdir(exist_ok=True)
-        dest = PROOF_DIR / f"{day}{src.suffix.lower()}"
+            raise SystemExit(f"Screenshot not found: {src}")
+        LOG_DIR.mkdir(exist_ok=True)
+        dest = LOG_DIR / f"{day}{src.suffix.lower()}"
         shutil.copyfile(src, dest)
-        proofs = load(PROOFS, {})
-        proofs[day] = f"proof/{dest.name}"
-        save(PROOFS, proofs)
-        to_add += ["data/proofs.json", f"proof/{dest.name}"]
-        print(f"Proof saved as {dest.relative_to(ROOT)}")
+        shots = load(SHOTS, {})
+        shots[day] = f"log/{dest.name}"
+        save(SHOTS, shots)
+        to_add += ["data/log.json", f"log/{dest.name}"]
+        print(f"Screenshot saved as {dest.relative_to(ROOT)}")
 
     if a.no_push:
         return

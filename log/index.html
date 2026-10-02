@@ -67,13 +67,13 @@
   const fmt = n => Math.round(n).toLocaleString("en-US");
   const bust = "?t=" + Date.now();
   const get = (url, fallback) => fetch(url + bust).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
-  const [cfg, steps, proofs] = await Promise.all([
-    get("../config.json", {}), get("../data/steps.json", { days: [] }), get("../data/proofs.json", {})
+  const [cfg, steps, shots] = await Promise.all([
+    get("../config.json", {}), get("../data/steps.json", { days: [] }), get("../data/log.json", {})
   ]);
   const byDate = Object.fromEntries((steps.days || []).map(d => [d.date, d.steps]));
   if (cfg.garmin_profile) { $("garmin").href = cfg.garmin_profile; $("garmin").classList.remove("hidden"); }
 
-  const days = Object.keys(proofs).sort().reverse();   // newest first
+  const days = Object.keys(shots).sort().reverse();   // newest first
   if (!days.length) { $("empty").classList.remove("hidden"); return; }
 
   const label = d => new Date(Date.parse(d + "T00:00:00Z")).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
@@ -89,9 +89,9 @@
     total.textContent = byDate[d] !== undefined ? fmt(byDate[d]) + " steps" : "";
     head.append(h2, total);
     const a = document.createElement("a");
-    a.className = "shot"; a.href = "../" + proofs[d]; a.target = "_blank"; a.rel = "noopener";
+    a.className = "shot"; a.href = "../" + shots[d]; a.target = "_blank"; a.rel = "noopener";
     const img = document.createElement("img");
-    img.src = "../" + proofs[d]; img.alt = "Garmin Connect step total for " + label(d); img.loading = "lazy";
+    img.src = "../" + shots[d]; img.alt = "Garmin Connect step total for " + label(d); img.loading = "lazy";
     a.appendChild(img);
     const note = document.createElement("p");
     note.className = "note";
