@@ -41,6 +41,7 @@
   .stat { background: var(--card); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
   .stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
   .stat span { color: var(--muted); font-size: 13px; }
+  .stat.wide { grid-column: 1 / -1; }
   .pace-ok { color: var(--ok); } .pace-behind { color: var(--warn); }
   h2 { font-size: 15px; margin: 0 0 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
   .chart { display: flex; align-items: flex-end; gap: 3px; height: 120px; position: relative; }
@@ -84,6 +85,7 @@
     <div class="stat"><b id="daysleft">-</b><span id="daysleft-l">days left</span></div>
     <div class="stat"><b id="avg">-</b><span>daily average</span></div>
     <div class="stat"><b id="need">-</b><span id="need-l">needed per day</span></div>
+    <div class="stat wide hidden" id="best-stat"><b id="best">-</b><span id="best-l">biggest day so far</span></div>
   </section>
 
   <section class="card">
@@ -225,6 +227,16 @@
   chart.appendChild(g);
   const short = s => new Date(dayNum(s) * 86400000).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
   $("c-start").textContent = short(cfg.start); $("c-end").textContent = short(cfg.end);
+
+  // Biggest day so far
+  if (data.days.length) {
+    const best = data.days.reduce((m, d) => d.steps > m.steps ? d : m);
+    if (best.steps > 0) {
+      $("best").textContent = fmt(best.steps);
+      $("best-l").textContent = "biggest day so far - " + short(best.date);
+      $("best-stat").classList.remove("hidden");
+    }
+  }
 
   const ded = cfg.dedications && cfg.dedications[todayS];
   if (ded) { $("dedic").textContent = ded; $("dedic-card").classList.remove("hidden"); }
