@@ -61,6 +61,21 @@
   .proofs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
   .proofs a { display: block; text-decoration: none; color: var(--muted); font-size: 12px; text-align: center; }
   .proofs img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; object-position: top; border-radius: 10px; border: 1px solid var(--track); display: block; margin-bottom: 4px; }
+  /* Subtle motion (switched off for people who prefer reduced motion) */
+  @media (prefers-reduced-motion: no-preference) {
+    .card, .stat, .btn { transition: opacity .6s ease, transform .35s ease, box-shadow .35s ease, filter .25s ease; }
+    .card:hover, .stat:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(230, 51, 122, .22); }
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.06); box-shadow: 0 10px 28px rgba(230, 51, 122, .35); }
+    .btn.alt:hover { background: rgba(230, 51, 122, .08); box-shadow: none; }
+    header img { transition: transform .4s ease; }
+    header img:hover { transform: scale(1.04) rotate(-1deg); }
+    .proofs img { transition: transform .3s ease, box-shadow .3s ease; }
+    .proofs a:hover img { transform: scale(1.04); box-shadow: var(--shadow); }
+    .chart .col { transform-origin: bottom; transition: transform .7s cubic-bezier(.2, .8, .2, 1); }
+    .js-anim .chart:not(.in) .col { transform: scaleY(0); }
+    .js-anim .reveal { opacity: 0; transform: translateY(18px); }
+    .js-anim .reveal.in { opacity: 1; transform: none; }
+  }
 </style>
 </head>
 <body>
@@ -245,6 +260,31 @@
     const mins = Math.round((Date.now() - Date.parse(data.updated)) / 60000);
     const ago = mins < 2 ? "just now" : mins < 90 ? mins + " min ago" : mins < 2880 ? Math.round(mins / 60) + " hours ago" : Math.round(mins / 1440) + " days ago";
     $("updated").textContent = "Last updated " + ago;
+  }
+
+  // Scroll animations: sections fade in as they appear and the chart bars grow in.
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+    document.documentElement.classList.add("js-anim");
+    const targets = [...document.querySelectorAll(".card, .stat, .btn, .fact, .updated")]
+      .filter(el => !el.classList.contains("hidden"));
+    targets.forEach((el, i) => { el.classList.add("reveal"); el.style.transitionDelay = (i % 4) * 70 + "ms"; });
+    const chart = $("chart");
+    [...chart.children].forEach((c, i) => { c.style.transitionDelay = i * 18 + "ms"; });
+    const show = el => {
+      if (el._shown) return;
+      el._shown = true;
+      io.unobserve(el);
+      el.classList.add("in");
+      if (el !== chart) {
+        // once revealed, drop the helper classes so hover effects behave normally
+        setTimeout(() => { el.classList.remove("reveal", "in"); el.style.transitionDelay = ""; }, 1000);
+      }
+    };
+    const io = new IntersectionObserver(entries => entries.forEach(en => { if (en.isIntersecting) show(en.target); }), { threshold: 0.12 });
+    targets.forEach(el => io.observe(el));
+    io.observe(chart);
+    // safety net: never leave anything hidden if visibility is not reported (background tab, previews)
+    setTimeout(() => { targets.forEach(show); show(chart); }, 3000);
   }
 })().catch(e => { document.getElementById("banner").textContent = "Couldn't load the step data. Please refresh."; document.getElementById("banner").classList.remove("hidden"); console.error(e); });
 </script>
