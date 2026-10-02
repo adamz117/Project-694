@@ -43,6 +43,35 @@
     .shot img { transition: transform .3s ease; }
     .shot:hover img { transform: scale(1.01); }
   }
+
+  /* Pop-up viewer for the screenshots */
+  .shot { cursor: zoom-in; }
+  body.lb-open { overflow: hidden; }
+  .lb { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(20, 8, 14, .88); opacity: 0; }
+  .lb[hidden] { display: none; }
+  .lb.show { opacity: 1; }
+  .lb-fig { margin: 0; max-width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .lb-fig img { max-width: 100%; max-height: calc(100vh - 120px); width: auto; height: auto; border-radius: 12px; background: #fff; box-shadow: 0 20px 60px rgba(0, 0, 0, .5); }
+  .lb-fig figcaption { color: #fff; font-weight: 700; font-size: 15px; text-align: center; }
+  .lb-x, .lb-nav { position: absolute; border: 0; cursor: pointer; color: #fff; background: rgba(255, 255, 255, .16); border-radius: 50%; width: 46px; height: 46px; font-size: 30px; line-height: 1; display: grid; place-items: center; }
+  .lb-x:hover, .lb-nav:hover { background: rgba(255, 255, 255, .3); }
+  .lb-x:focus-visible, .lb-nav:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .lb-nav[hidden] { display: none; }
+  .lb-x { top: 14px; right: 14px; }
+  .lb-nav { top: 50%; margin-top: -23px; }
+  .lb-nav.prev { left: 12px; }
+  .lb-nav.next { right: 12px; }
+  @media (max-width: 600px) {
+    .lb-fig img { max-height: calc(100vh - 190px); }
+    .lb-nav { top: auto; bottom: 22px; margin-top: 0; }
+    .lb-nav.prev { left: calc(50% - 58px); }
+    .lb-nav.next { right: calc(50% - 58px); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .lb { transition: opacity .2s ease; }
+    .lb-fig img { transform: scale(.96); transition: transform .25s ease; }
+    .lb.show .lb-fig img { transform: none; }
+  }
 </style>
 </head>
 <body>
@@ -61,6 +90,16 @@
   <a class="btn" href="../">Back to the live count</a>
 </main>
 
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Screenshot viewer">
+  <button class="lb-x" id="lb-x" type="button" aria-label="Close">&times;</button>
+  <button class="lb-nav prev" id="lb-prev" type="button" aria-label="Earlier day">&#8249;</button>
+  <figure class="lb-fig">
+    <img id="lb-img" alt="">
+    <figcaption id="lb-cap"></figcaption>
+  </figure>
+  <button class="lb-nav next" id="lb-next" type="button" aria-label="Later day">&#8250;</button>
+</div>
+
 <script>
 (async () => {
   const $ = id => document.getElementById(id);
@@ -77,6 +116,7 @@
   if (!days.length) { $("empty").classList.remove("hidden"); return; }
 
   const label = d => new Date(Date.parse(d + "T00:00:00Z")).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+  const items = [];   // same order as the cards: newest first
   for (const d of days) {
     const card = document.createElement("section");
     card.className = "card";
@@ -89,16 +129,73 @@
     total.textContent = byDate[d] !== undefined ? fmt(byDate[d]) + " steps" : "";
     head.append(h2, total);
     const a = document.createElement("a");
-    a.className = "shot"; a.href = "../" + shots[d]; a.target = "_blank"; a.rel = "noopener";
+    a.className = "shot"; a.href = "../" + shots[d]; a.target = "_blank"; a.rel = "noopener";   // fallback for ctrl/middle click
     const img = document.createElement("img");
     img.src = "../" + shots[d]; img.alt = "Garmin Connect step total for " + label(d); img.loading = "lazy";
     a.appendChild(img);
+    const idx = items.length;
+    items.push({ src: img.src, alt: img.alt, cap: label(d) + (byDate[d] !== undefined ? " - " + fmt(byDate[d]) + " steps" : "") });
+    a.addEventListener("click", e => {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;   // let "open in new tab" work
+      e.preventDefault(); openViewer(idx, a);
+    });
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = "Screenshot of the Garmin Connect Steps page for this day.";
     card.append(head, a, note);
     $("list").appendChild(card);
   }
+
+  // Pop-up viewer: tap a screenshot to enlarge it over the page
+  const lb = $("lb"), lbImg = $("lb-img"), lbCap = $("lb-cap"), lbPrev = $("lb-prev"), lbNext = $("lb-next"), lbX = $("lb-x");
+  let cur = -1, opener = null, hideTimer = null;
+  function showItem(i) {
+    cur = i;
+    lbImg.src = items[i].src; lbImg.alt = items[i].alt; lbCap.textContent = items[i].cap;
+    lbPrev.hidden = i >= items.length - 1;   // list is newest first, so "earlier" is further down
+    lbNext.hidden = i <= 0;
+  }
+  function openViewer(i, from) {
+    clearTimeout(hideTimer);
+    opener = from;
+    showItem(i);
+    lb.hidden = false;
+    document.body.classList.add("lb-open");
+    setTimeout(() => lb.classList.add("show"), 20);
+    lbX.focus();
+  }
+  function closeViewer() {
+    if (cur < 0) return;
+    cur = -1;
+    lb.classList.remove("show");
+    document.body.classList.remove("lb-open");
+    hideTimer = setTimeout(() => { lb.hidden = true; lbImg.removeAttribute("src"); }, 220);
+    if (opener) opener.focus();
+  }
+  const step = delta => { const n = cur + delta; if (cur >= 0 && n >= 0 && n < items.length) showItem(n); };
+  lbX.addEventListener("click", closeViewer);
+  lbPrev.addEventListener("click", () => step(1));
+  lbNext.addEventListener("click", () => step(-1));
+  lb.addEventListener("click", e => { if (e.target === lb || e.target.classList.contains("lb-fig")) closeViewer(); });
+  document.addEventListener("keydown", e => {
+    if (cur < 0) return;
+    if (e.key === "Escape") closeViewer();
+    else if (e.key === "ArrowLeft") step(1);      // earlier day
+    else if (e.key === "ArrowRight") step(-1);    // later day
+    else if (e.key === "Tab") {                   // keep keyboard focus inside the viewer
+      const els = [lbX, lbPrev, lbNext].filter(b => !b.hidden);
+      const at = els.indexOf(document.activeElement);
+      e.preventDefault();
+      els[(at + (e.shiftKey ? els.length - 1 : 1)) % els.length].focus();
+    }
+  });
+  let touchX = null;   // swipe left/right on the image
+  lb.addEventListener("touchstart", e => { touchX = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener("touchend", e => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX; touchX = null;
+    if (Math.abs(dx) > 60) step(dx < 0 ? -1 : 1);
+  }, { passive: true });
 })();
 </script>
 </body>
