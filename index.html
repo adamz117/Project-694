@@ -44,11 +44,21 @@
   .stat.wide { grid-column: 1 / -1; }
   .pace-ok { color: var(--ok); } .pace-behind { color: var(--warn); }
   h2 { font-size: 15px; margin: 0 0 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
-  .chart { display: flex; align-items: flex-end; gap: 3px; height: 120px; position: relative; }
+  .chart { display: flex; align-items: flex-end; gap: 3px; height: 120px; position: relative; touch-action: pan-y; }
   .chart .col { flex: 1; background: var(--pink-2); border-radius: 3px 3px 0 0; min-height: 2px; }
   .chart .col.today { background: var(--pink); }
   .chart .col.empty { background: var(--track); }
-  .chart .goal { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--muted); opacity: .6; }
+  .chart .goal { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--muted); opacity: .6; pointer-events: none; }
+  .chart .slot { flex: 1; height: 100%; display: flex; align-items: flex-end; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+  .chart .slot .col { transform-origin: bottom; }
+  .chart .slot:hover .col, .chart .slot:focus-visible .col, .chart .slot.active .col { transform: scale(1.22, 1.06); filter: brightness(1.1); }
+  .chart:hover .slot:not(:hover) .col, .chart:focus-within .slot:not(.active) .col { opacity: .55; }
+  .tip { position: absolute; z-index: 5; pointer-events: none; opacity: 0; transition: opacity .15s ease; white-space: nowrap; text-align: center; line-height: 1.3;
+         background: linear-gradient(135deg, #e6337a, #b8125a); color: #fff; padding: 8px 14px; border-radius: 12px; box-shadow: 0 8px 22px rgba(150, 16, 74, .35); }
+  .tip.show { opacity: 1; }
+  .tip small { display: block; font-size: 11px; opacity: .88; letter-spacing: .03em; }
+  .tip b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
+  .tip::after { content: ""; position: absolute; bottom: -6px; left: var(--cx, 50%); transform: translateX(-50%); border: 6px solid transparent; border-top-color: #b8125a; border-bottom: 0; }
   .chart-note { font-size: 12px; color: var(--muted); margin-top: 6px; display: flex; justify-content: space-between; }
   .dedic { text-align: center; font-size: 17px; }
   .dedic small { display: block; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
@@ -71,7 +81,7 @@
     header img:hover { transform: scale(1.04) rotate(-1deg); }
     .proofs img { transition: transform .3s ease, box-shadow .3s ease; }
     .proofs a:hover img { transform: scale(1.04); box-shadow: var(--shadow); }
-    .chart .col { transform-origin: bottom; transition: transform .7s cubic-bezier(.2, .8, .2, 1); }
+    .chart .col { transition: transform .25s cubic-bezier(.2, .8, .2, 1), filter .2s ease, opacity .2s ease; }
     .js-anim .chart:not(.in) .col { transform: scaleY(0); }
     .js-anim .reveal { opacity: 0; transform: translateY(18px); }
     .js-anim .reveal.in { opacity: 1; transform: none; }
@@ -230,16 +240,60 @@
   const chart = $("chart");
   for (let i = 0; i < totalDays; i++) {
     const d = new Date((start + i) * 86400000).toISOString().slice(0, 10);
+    const slot = document.createElement("div");   // full-height hover zone, so small bars are easy to hit
+    slot.className = "slot"; slot.tabIndex = 0; slot.dataset.date = d;
     const col = document.createElement("div");
     const v = byDate[d];
     col.className = "col" + (v === undefined ? " empty" : "") + (d === todayS ? " today" : "");
     col.style.height = (v === undefined ? 2 : Math.max(2, v / max * 100)) + "%";
-    col.title = d + (v === undefined ? "" : ": " + fmt(v) + " steps");
-    chart.appendChild(col);
+    slot.appendChild(col);
+    chart.appendChild(slot);
   }
   const g = document.createElement("div");
   g.className = "goal"; g.style.bottom = (daily / max * 100) + "%";
   chart.appendChild(g);
+
+  // Tooltip with the date and step count, plus a slight grow on the hovered bar
+  const tip = document.createElement("div");
+  tip.className = "tip"; tip.setAttribute("role", "status");
+  chart.appendChild(tip);
+  const bestDay = data.days.length ? data.days.reduce((m, d) => d.steps > m.steps ? d : m) : null;
+  const dayLabel = d => new Date(dayNum(d) * 86400000).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+  const slots = [...chart.querySelectorAll(".slot")];
+  const hideTip = () => { tip.classList.remove("show"); slots.forEach(s => s.classList.remove("active")); };
+  const showTip = slot => {
+    const d = slot.dataset.date, v = byDate[d];
+    const main = v !== undefined ? fmt(v) + " steps" : (d > todayS ? "Coming up" : "No data");
+    let sub = "";
+    if (v !== undefined) {
+      sub = Math.round(v / daily * 100) + "% of daily target";
+      if (bestDay && bestDay.steps > 0 && d === bestDay.date) sub += " &middot; &#9733; best day";
+    }
+    tip.innerHTML = "<small>" + dayLabel(d) + "</small><b>" + main + "</b>" + (sub ? "<small>" + sub + "</small>" : "");
+    slots.forEach(s => s.classList.toggle("active", s === slot));
+    tip.classList.add("show");
+    const cw = chart.clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+    const cx = slot.offsetLeft + slot.offsetWidth / 2;
+    const left = Math.min(Math.max(cx - tw / 2, 0), cw - tw);
+    tip.style.left = left + "px";
+    tip.style.setProperty("--cx", Math.min(Math.max(cx - left, 14), tw - 14) + "px");
+    tip.style.top = (chart.clientHeight - slot.firstChild.offsetHeight - th - 12) + "px";
+  };
+  slots.forEach(s => {
+    s.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") showTip(s); });
+    s.addEventListener("focus", () => showTip(s));
+    s.addEventListener("blur", hideTip);
+    s.addEventListener("click", () => showTip(s));            // tap on phones
+  });
+  // Touch: tap or slide a finger along the chart to pick the nearest day (bars are thin on phones)
+  const slotAtX = x => {
+    const r = chart.getBoundingClientRect();
+    return slots[Math.min(slots.length - 1, Math.max(0, Math.floor((x - r.left) / r.width * slots.length)))];
+  };
+  chart.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") showTip(slotAtX(e.clientX)); });
+  chart.addEventListener("pointermove", e => { if (e.pointerType !== "mouse" && e.buttons) showTip(slotAtX(e.clientX)); });
+  chart.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") hideTip(); });
+  document.addEventListener("click", e => { if (!chart.contains(e.target)) hideTip(); });
   const short = s => new Date(dayNum(s) * 86400000).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
   $("c-start").textContent = short(cfg.start); $("c-end").textContent = short(cfg.end);
 
@@ -269,13 +323,18 @@
       .filter(el => !el.classList.contains("hidden"));
     targets.forEach((el, i) => { el.classList.add("reveal"); el.style.transitionDelay = (i % 4) * 70 + "ms"; });
     const chart = $("chart");
-    [...chart.children].forEach((c, i) => { c.style.transitionDelay = i * 18 + "ms"; });
+    const cols = [...chart.querySelectorAll(".col")];
+    // intro: bars grow in one after another, slower than the quick hover effect
+    cols.forEach((c, i) => { c.style.transitionDelay = i * 18 + "ms"; c.style.transitionDuration = ".7s"; });
     const show = el => {
       if (el._shown) return;
       el._shown = true;
       io.unobserve(el);
       el.classList.add("in");
-      if (el !== chart) {
+      if (el === chart) {
+        // after the intro, restore the quick hover timing
+        setTimeout(() => cols.forEach(c => { c.style.transitionDelay = ""; c.style.transitionDuration = ""; }), cols.length * 18 + 900);
+      } else {
         // once revealed, drop the helper classes so hover effects behave normally
         setTimeout(() => { el.classList.remove("reveal", "in"); el.style.transitionDelay = ""; }, 1000);
       }
